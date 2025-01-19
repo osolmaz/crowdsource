@@ -1,0 +1,1148 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Ommerism World Map</title>
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="anonymous"
+    />
+    <style>
+      /* Set the size of the map container */
+      #mapid {
+        height: 600px;
+        width: 100%;
+        margin: 0 auto;
+      }
+      /* (Optional) Make popups more readable */
+      .leaflet-popup-content {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Map container -->
+    <div id="mapid"></div>
+
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      /**
+       * ommerismLevel legend:
+       *   0 = Only for blood relatives
+       *   1 = For close non-relatives (like family friends)
+       *   2 = For casual acquaintances / community members
+       *   3 = Even for total strangers
+       *
+       * 'terms' array: DO NOT CHANGE existing items, but for level 1+ we can add minimal terms if missing.
+       */
+
+      const countryData = {
+        // A
+        Afghanistan: {
+          ommerismLevel: 3,
+          terms: [
+            "Kaka (کاکا) - paternal uncle",
+            "Mama (ماما) - maternal uncle",
+            "Amo (عمو) - uncle in Dari",
+            "Khala (خاله) - aunt",
+          ],
+        },
+        Albania: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Algeria: {
+          ommerismLevel: 3,
+          terms: [
+            "3ammo (عمّو) - uncle",
+            "Khalti (خالتي) - aunt",
+            "Sometimes 'Oncle/Tante' (French) for older strangers in certain contexts",
+          ],
+        },
+        Andorra: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Catalan 'tiet/tieta' sometimes used for acquaintances"],
+        },
+        Angola: {
+          ommerismLevel: 2,
+          terms: ["Portuguese Tio/Tia for acquaintances"],
+        },
+        Argentina: {
+          ommerismLevel: 2,
+          terms: ["Spanish Tío/Tía for acquaintances/friends"],
+        },
+        Armenia: {
+          ommerismLevel: 1,
+          // Added minimal term for level 1
+          terms: ["Hopar (հոպար) or Keri (քեռի) among close family friends"],
+        },
+        Australia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Austria: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Azerbaijan: {
+          ommerismLevel: 1,
+          terms: [
+            "Dayı (maternal uncle) or Əmi (paternal uncle) for close family friends, not strangers",
+          ],
+        },
+
+        // B
+        Bahamas: {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["Uncle/Auntie in local usage for older acquaintances"],
+        },
+        Bahrain: {
+          ommerismLevel: 3,
+          terms: ["3ammo (عمّو)", "Khalto (خالته)"],
+        },
+        Bangladesh: {
+          ommerismLevel: 3,
+          terms: [
+            "Mama (মামা) - maternal uncle",
+            "Chacha (চাচা) - paternal uncle",
+            "Mami/Chachi/Khala (খালা) - various aunt terms",
+            "‘Uncle/Aunty’ in English",
+          ],
+        },
+        Barbados: {
+          ommerismLevel: 3,
+          terms: ["Uncle", "Auntie"],
+        },
+        Belarus: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Belgium: {
+          ommerismLevel: 1,
+          terms: ["Tonton/tata for close family friends"],
+        },
+        Bhutan: {
+          ommerismLevel: 2,
+          terms: ["Uncle/Aunty (English) sometimes used in cities"],
+        },
+        Bolivia: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        "Bosnia and Herzegovina": {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Botswana: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Brazil: {
+          ommerismLevel: 2,
+          terms: ["Tio/Tia used for acquaintances"],
+        },
+        Brunei: {
+          ommerismLevel: 3,
+          terms: [
+            "Pakcik (uncle), Makcik (aunt) in Malay",
+            "English ‘Uncle/Auntie’ usage is also common",
+          ],
+        },
+        Bulgaria: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        "Burkina Faso": {
+          ommerismLevel: 3,
+          terms: ["Tonton (uncle)", "Tata (aunt)", "(French or local)"],
+        },
+        Burundi: {
+          ommerismLevel: 3,
+          terms: [
+            "English usage: 'Uncle/Auntie' in some contexts",
+            "Local terms exist but not widely documented in English sources",
+          ],
+        },
+
+        // C
+        Cambodia: {
+          ommerismLevel: 3,
+          terms: [
+            "Pu (ពូ) - uncle",
+            "Ming (មីង) - aunt",
+            "Bong (បង) - older sibling",
+          ],
+        },
+        Cameroon: {
+          ommerismLevel: 3,
+          terms: ["Tonton/Tata", "Uncle/Auntie"],
+        },
+        Canada: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        "Central African Republic": {
+          ommerismLevel: 3,
+          terms: ["Oncle/Tante (French) or local equivalents"],
+        },
+        Chad: {
+          ommerismLevel: 3,
+          terms: [
+            "3ammo (Arabic) or Oncle/Tante (French), depending on region",
+          ],
+        },
+        Chile: {
+          ommerismLevel: 2,
+          terms: ["Tío/Tía for acquaintances"],
+        },
+        China: {
+          ommerismLevel: 3,
+          terms: [
+            "Shūshu (叔叔) - uncle",
+            "Āyí (阿姨) - aunt",
+            "Dàshū (大叔) - literally 'big uncle' (colloquial for older man)",
+            "Dàmā (大妈) - older auntie figure (in some regions)",
+          ],
+        },
+        Colombia: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Comoros: {
+          ommerismLevel: 3,
+          terms: [
+            "Possible usage in Arabic or local tongues (Swahili variants)",
+          ],
+        },
+        "Costa Rica": {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Croatia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Cuba: {
+          ommerismLevel: 2,
+          terms: [
+            "Spanish usage with Afro-Caribbean influence for acquaintances",
+          ],
+        },
+        Cyprus: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        "Czech Republic": {
+          ommerismLevel: 0,
+          terms: [],
+        },
+
+        // D
+        "Democratic Republic of the Congo": {
+          ommerismLevel: 3,
+          terms: [
+            "In French: Tonton/Tata, or local languages' equivalents",
+            "Fictive kin is common in many African contexts",
+          ],
+        },
+        Denmark: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Djibouti: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto, etc. in Arabic-speaking contexts"],
+        },
+        "Dominican Republic": {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+
+        // E
+        Ecuador: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Egypt: {
+          ommerismLevel: 3,
+          terms: ["3ammo (عمّو)", "Khaltu (خالته)"],
+        },
+        "El Salvador": {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        "Equatorial Guinea": {
+          ommerismLevel: 2,
+          terms: ["Spanish usage for acquaintances"],
+        },
+        Eritrea: {
+          ommerismLevel: 3,
+          terms: [
+            "Likely local equivalents, plus Arabic usage '3ammo/Khala' in some communities",
+          ],
+        },
+        Estonia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Eswatini: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Ethiopia: {
+          ommerismLevel: 3,
+          terms: [
+            "Amharic, Tigrinya, Oromo kin terms can be extended fictively",
+            "English 'Uncle/Auntie' is also used in some urban settings",
+          ],
+        },
+
+        // F
+        Finland: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        France: {
+          ommerismLevel: 1,
+          terms: ["Tonton/tata for close friends"],
+        },
+
+        // G
+        Gabon: {
+          ommerismLevel: 3,
+          terms: ["Tonton/Tata (French) in informal contexts"],
+        },
+        Gambia: {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie (English) or local language equivalents"],
+        },
+        Georgia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Germany: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Ghana: {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Auntie in Ghanaian English",
+            "Local languages also have extended kin usage",
+          ],
+        },
+        Greece: {
+          ommerismLevel: 1,
+          terms: ["Theío/theía occasionally for close acquaintances"],
+        },
+        Guatemala: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Guinea: {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["Tonton (uncle), Tata (aunt) in French or local languages"],
+        },
+        "Guinea-Bissau": {
+          ommerismLevel: 3,
+          terms: [
+            "Tio/Tia (Portuguese) or local languages. Possibly used fictively.",
+          ],
+        },
+        Guyana: {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie in Guyanese Creole/English"],
+        },
+
+        // H
+        Haiti: {
+          ommerismLevel: 3,
+          terms: ["Tonton (uncle), Tant (aunt) in Haitian Creole"],
+        },
+        Honduras: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Hungary: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+
+        // I
+        Iceland: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        India: {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Aunty (Indian English)",
+            "Chacha/Chachi (Hindi) - paternal uncle/aunt",
+            "Mama/Mami (Hindi) - maternal uncle/aunt",
+            "Maama/Maami (Tamil) - uncle/aunt",
+            "Many other regional variations",
+          ],
+        },
+        Indonesia: {
+          ommerismLevel: 3,
+          terms: ["Om", "Tante"],
+        },
+        Iran: {
+          ommerismLevel: 3,
+          terms: [
+            "Amu (عمو) - paternal uncle",
+            "Khale (خاله) - maternal aunt",
+            "Ammé (عمه) - paternal aunt",
+            "Often used fictively for older strangers in some contexts",
+          ],
+        },
+        Iraq: {
+          ommerismLevel: 3,
+          terms: ["3ammo (عمّو) - uncle", "Khalto (خالته) - aunt"],
+        },
+        Ireland: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Israel: {
+          ommerismLevel: 3,
+          terms: [
+            "Arabic speakers: 3ammo / khalto",
+            "Hebrew: dod/doda typically for actual relatives; can be used for close family friends",
+          ],
+        },
+        Italy: {
+          ommerismLevel: 2,
+          terms: ["Zio/Zia sometimes for older acquaintances"],
+        },
+
+        // J
+        Jamaica: {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie in Jamaican English/Patois"],
+        },
+        Japan: {
+          ommerismLevel: 3,
+          terms: [
+            "Ojisan (おじさん)",
+            "Obasan (おばさん)",
+            "Caution: can be tricky if they feel 'too young' for that term",
+          ],
+        },
+        Jordan: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+
+        // K
+        Kazakhstan: {
+          ommerismLevel: 1,
+          // Added minimal term for level 1
+          terms: [
+            "Agha (аға) or Täte (тәте) for close family friends, not strangers",
+          ],
+        },
+        Kenya: {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Auntie (English)",
+            "Swahili: Mjomba (uncle), Shangazi (aunt)",
+          ],
+        },
+        Kiribati: {
+          ommerismLevel: 3,
+          terms: [
+            "Likely local kin terms for older community members",
+            "English 'Uncle/Auntie' usage might appear",
+          ],
+        },
+        Kosovo: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Kuwait: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto (Arabic)"],
+        },
+        Kyrgyzstan: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+
+        // L
+        Laos: {
+          ommerismLevel: 3,
+          terms: [
+            "Older men/women often addressed with local kin terms akin to ‘uncle/aunt’",
+            "Examples: Lung (uncle), Pa (aunt) — similar to Thai usage",
+          ],
+        },
+        Latvia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Lebanon: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+        Lesotho: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Liberia: {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie in Liberian English"],
+        },
+        Libya: {
+          ommerismLevel: 3,
+          terms: ["3ammo (عمّو)", "Khalto (خالته)"],
+        },
+        Liechtenstein: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Lithuania: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Luxembourg: {
+          ommerismLevel: 1,
+          terms: ["Limited usage of tonton/tata for close family friends"],
+        },
+
+        // M
+        Madagascar: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Malawi: {
+          ommerismLevel: 3,
+          terms: [
+            "Fictive kin in local languages, plus English ‘Uncle/Auntie’ sometimes",
+          ],
+        },
+        Malaysia: {
+          ommerismLevel: 3,
+          terms: [
+            "Pakcik (uncle), Makcik (aunt) in Malay",
+            "Chinese Malaysians might say 'Shushu/Ayi' (Mandarin)",
+            "English ‘Uncle/Auntie’ also common",
+          ],
+        },
+        Maldives: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Mali: {
+          ommerismLevel: 3,
+          terms: ["Local languages or French Tonton/Tata"],
+        },
+        Malta: {
+          ommerismLevel: 1,
+          // Added minimal term for level 1
+          terms: [
+            "Żiju (uncle), Żija (aunt) in Maltese for close acquaintances",
+          ],
+        },
+        "Marshall Islands": {
+          ommerismLevel: 3,
+          terms: [
+            "Likely local language terms for older men/women, plus English usage in some contexts",
+          ],
+        },
+        Mauritania: {
+          ommerismLevel: 3,
+          terms: ["Arabic 3ammo/khalto or local languages usage"],
+        },
+        Mauritius: {
+          ommerismLevel: 3,
+          terms: [
+            "Tonton/Tata (French), Uncle/Aunty (English), Mama/Mami (Indian languages)",
+          ],
+        },
+        Mexico: {
+          ommerismLevel: 2,
+          terms: ["Tío/Tía for acquaintances"],
+        },
+        "Micronesia (Federated States of)": {
+          ommerismLevel: 3,
+          terms: ["Local kin terms + English Uncle/Auntie"],
+        },
+        Moldova: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Monaco: {
+          ommerismLevel: 0,
+          terms: ["Tonton/tata occasionally for close friends"],
+        },
+        Mongolia: {
+          ommerismLevel: 2,
+          terms: ["Avga (older female), Avga akh (uncle) in some contexts"],
+        },
+        Montenegro: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Morocco: {
+          ommerismLevel: 3,
+          terms: ["3ammo (عمّو)", "Khalti (خالتي)"],
+        },
+        Mozambique: {
+          ommerismLevel: 2,
+          terms: ["Tio/Tia for acquaintances"],
+        },
+        Myanmar: {
+          ommerismLevel: 3,
+          terms: [
+            "U (ဦ) - older man (akin to Mr./Uncle)",
+            "Daw (ဒေါ်) - older woman (Ms./Auntie)",
+          ],
+        },
+
+        // N
+        Namibia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Nauru: {
+          ommerismLevel: 3,
+          terms: ["Local kin terms + English usage"],
+        },
+        Nepal: {
+          ommerismLevel: 3,
+          terms: ["Kaka/Kaki, Mama/Mami, etc.", "English: Uncle/Aunty"],
+        },
+        Netherlands: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        "New Zealand": {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Nicaragua: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Niger: {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["French Tonton/Tata or local languages usage"],
+        },
+        Nigeria: {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Auntie in Nigerian English",
+            "Local language equivalents",
+          ],
+        },
+        "North Korea": {
+          ommerismLevel: 3,
+          terms: ["Similar to South: Ajusshi (아저씨), Ajumma (아줌마)"],
+        },
+        "North Macedonia": {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Norway: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+
+        // O
+        Oman: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+
+        // P
+        Pakistan: {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Aunty (English)",
+            "Chacha/Chachi, Mama/Mami (Urdu/Punjabi/Sindhi etc.)",
+          ],
+        },
+        Palau: {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: [
+            "Local language kin terms or English 'Uncle/Auntie' for older acquaintances",
+          ],
+        },
+        Panama: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        "Papua New Guinea": {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Auntie in PNG English",
+            "Local kin terms for older men/women",
+          ],
+        },
+        Paraguay: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Peru: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Philippines: {
+          ommerismLevel: 3,
+          terms: [
+            "Tito (uncle), Tita (aunt)",
+            "Kuya (older brother)/Ate (older sister) for lesser age gaps",
+          ],
+        },
+        Poland: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Portugal: {
+          ommerismLevel: 2,
+          terms: ["Tio/Tia for acquaintances"],
+        },
+        Qatar: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+
+        // R
+        "Republic of the Congo": {
+          ommerismLevel: 3,
+          terms: ["Oncle/Tante (French) or local languages"],
+        },
+        Romania: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Russia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Rwanda: {
+          ommerismLevel: 1,
+          // Added minimal term for level 1
+          terms: [
+            "Occasionally uses paternal/maternal terms among close acquaintances in local languages",
+          ],
+        },
+
+        // S
+        "Saint Kitts and Nevis": {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie"],
+        },
+        "Saint Lucia": {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["Uncle/Auntie for older acquaintances in local usage"],
+        },
+        "Saint Vincent and the Grenadines": {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["Uncle/Auntie for older acquaintances in local usage"],
+        },
+        Samoa: {
+          ommerismLevel: 3,
+          terms: ["Local Samoan terms, plus 'Auntie/Uncle' in English"],
+        },
+        "San Marino": {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Similar to Italy: Zio/Zia for older acquaintances"],
+        },
+        "Sao Tome and Principe": {
+          ommerismLevel: 2,
+          terms: ["Portuguese usage tio/tia for acquaintances"],
+        },
+        "Saudi Arabia": {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+        Senegal: {
+          ommerismLevel: 3,
+          terms: ["Tonton/Tata (French) or local languages"],
+        },
+        Serbia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Seychelles: {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie or Tonton/Tanta in Seychelles Creole"],
+        },
+        "Sierra Leone": {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie in Krio/English"],
+        },
+        Singapore: {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Auntie in local English",
+            "Pakcik/Makcik (Malay), Shushu/Ayi (Mandarin), Maama/Maami (Tamil)",
+          ],
+        },
+        Slovakia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Slovenia: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        "Solomon Islands": {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["English Uncle/Auntie or local Pijin usage"],
+        },
+        Somalia: {
+          ommerismLevel: 3,
+          terms: ["Adeer, Abti, Eedo, etc."],
+        },
+        "South Africa": {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Auntie in South African English",
+            "Local languages have other kinship forms",
+          ],
+        },
+        "South Korea": {
+          ommerismLevel: 3,
+          terms: [
+            "Ajeossi (아저씨) - older man",
+            "Ajumma (아줌마) - older woman",
+            "Samchon (삼촌) - uncle, used occasionally",
+            "Imo (이모) - maternal aunt in certain contexts",
+          ],
+        },
+        "South Sudan": {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["Local languages usage or English Uncle/Auntie"],
+        },
+        Spain: {
+          ommerismLevel: 2,
+          terms: [
+            "Tío/Tía used beyond blood relatives, but not for total strangers",
+          ],
+        },
+        "Sri Lanka": {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Aunty in English",
+            "Sinhalese: Mama (මාමා) - maternal uncle, Baappa (බාප්ප) - paternal uncle, etc.",
+            "Mama (මාමා)/Maami in Tamil",
+          ],
+        },
+        Sudan: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+        Suriname: {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["Tonton/Tata or English Uncle/Auntie usage in some contexts"],
+        },
+        Sweden: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Switzerland: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Syria: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+
+        // T
+        Taiwan: {
+          ommerismLevel: 3,
+          terms: [
+            "Shūshu (叔叔), Āyí (阿姨) in Mandarin, plus local dialect variants",
+          ],
+        },
+        Tajikistan: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Tanzania: {
+          ommerismLevel: 3,
+          terms: [
+            "Uncle/Auntie in English",
+            "Mjomba (uncle), Shangazi (aunt) in Swahili",
+          ],
+        },
+        Thailand: {
+          ommerismLevel: 3,
+          terms: [
+            "Lung (ลุง) - older man/uncle",
+            "Pa (ป้า) - older woman/aunt",
+          ],
+        },
+        "Timor-Leste": {
+          ommerismLevel: 3,
+          terms: ["Tio/Tia (Portuguese)", "Local Tetum equivalents"],
+        },
+        Togo: {
+          ommerismLevel: 3,
+          terms: ["French Tonton/Tata or local languages"],
+        },
+        Tonga: {
+          ommerismLevel: 3,
+          terms: ["Local Tongan kin terms + 'Uncle/Auntie' in English"],
+        },
+        "Trinidad and Tobago": {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie in Trini English/Creole"],
+        },
+        Tunisia: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto", "In Tunisian Arabic dialect"],
+        },
+        Turkey: {
+          ommerismLevel: 3,
+          terms: [
+            "Amca (uncle)",
+            "Teyze (aunt)",
+            "Dayı (uncle on maternal side)",
+          ],
+        },
+        Turkmenistan: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Tuvalu: {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["Local language or English usage for older acquaintances"],
+        },
+
+        // U
+        Uganda: {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie in English or local languages"],
+        },
+        Ukraine: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        "United Arab Emirates": {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+        "United Kingdom": {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        "United States of America": {
+          ommerismLevel: 0,
+          terms: [],
+        },
+        Uruguay: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Uzbekistan: {
+          ommerismLevel: 0,
+          terms: [],
+        },
+
+        // V
+        Vanuatu: {
+          ommerismLevel: 3,
+          // Added minimal term for level 3
+          terms: ["Local language or English 'Uncle/Auntie' usage"],
+        },
+        "Vatican City": {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Zio/Zia, following Italian usage for acquaintances"],
+        },
+        Venezuela: {
+          ommerismLevel: 2,
+          // Added minimal term for level 2
+          terms: ["Spanish Tío/Tía for acquaintances"],
+        },
+        Vietnam: {
+          ommerismLevel: 3,
+          terms: ["Chú, Bác, Cô, Dì"],
+        },
+
+        // Y
+        Yemen: {
+          ommerismLevel: 3,
+          terms: ["3ammo, Khalto"],
+        },
+
+        // Z
+        Zambia: {
+          ommerismLevel: 3,
+          terms: ["Uncle/Auntie (English) for elders"],
+        },
+        Zimbabwe: {
+          ommerismLevel: 3,
+          terms: [
+            "Sekuru (grandfather/uncle), Ambuya (grandmother) in Shona—but 'Uncle/Auntie' in English is also common",
+          ],
+        },
+      };
+
+      // 1. Create the map
+      const map = L.map("mapid").setView([20, 0], 2); // Center on equator, zoom out
+
+      // 2. Add a base tile layer (using CartoDB Positron without labels)
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: "abcd",
+          maxZoom: 19,
+        }
+      ).addTo(map);
+
+      // 3. Define a color style based on ommerismLevel
+      function style(feature) {
+        const countryName = feature.properties.name;
+        const data = countryData[countryName];
+
+        // Default fill if not found
+        let fillColor = "#ccc";
+
+        if (data && data.ommerismLevel !== undefined) {
+          switch (data.ommerismLevel) {
+            case 0:
+              // Only blood relatives
+              fillColor = "#ffffff";
+              break;
+            case 1:
+              // Close non-relatives
+              fillColor = "#ffd080"; // light orange
+              break;
+            case 2:
+              // Casual acquaintances
+              fillColor = "#ff9966"; // medium orange
+              break;
+            case 3:
+              // Total strangers
+              fillColor = "#ff0000"; // coral
+              break;
+            default:
+              fillColor = "#fff";
+          }
+        }
+
+        return {
+          color: "#999",
+          weight: 1,
+          fillColor: fillColor,
+          fillOpacity: 0.6,
+        };
+      }
+
+      // 4. Tooltip to show ommerism level + sample terms
+      function onEachFeature(feature, layer) {
+        const countryName = feature.properties.name;
+        const data = countryData[countryName];
+
+        let tooltipContent = `<strong>${countryName}</strong><br/>No data`;
+
+        if (data && data.ommerismLevel !== undefined) {
+          // Map level to text
+          let levelText = "";
+          switch (data.ommerismLevel) {
+            case 0:
+              levelText = "Level 0: Only actual relatives";
+              break;
+            case 1:
+              levelText = "Level 1: Close non-relatives";
+              break;
+            case 2:
+              levelText = "Level 2: Casual acquaintances";
+              break;
+            case 3:
+              levelText = "Level 3: Total strangers";
+              break;
+            default:
+              levelText = "Unknown level";
+          }
+
+          // Terms
+          const termsHtml =
+            data.terms && data.terms.length
+              ? `<br/><u>Terms:</u><br/>${data.terms.join("<br/>")}`
+              : "";
+
+          tooltipContent = `<strong>${countryName}</strong><br/>
+            ${levelText}${termsHtml}`;
+        }
+
+        layer.bindTooltip(tooltipContent, {
+          sticky: true, // follow mouse
+          direction: "auto",
+          className: "leaflet-tooltip-custom",
+        });
+
+        // Hover highlight
+        layer.on({
+          mouseover: function () {
+            layer.setStyle({
+              weight: 2,
+              fillOpacity: 0.8,
+            });
+          },
+          mouseout: function () {
+            layer.setStyle(style(feature));
+          },
+        });
+      }
+
+      // 5. Load GeoJSON
+      fetch(
+        "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json"
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          L.geoJSON(data, {
+            style: style,
+            onEachFeature: onEachFeature,
+          }).addTo(map);
+        })
+        .catch((error) => {
+          console.error("Error loading GeoJSON:", error);
+        });
+    </script>
+  </body>
+</html>
